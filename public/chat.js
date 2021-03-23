@@ -1,23 +1,47 @@
 // Make connection
-let socket = io.connect("http://localhost:8080");
+const socket = io.connect("http://localhost:8080");
 
 //  Query DOM
-let message = document.getElementById('message');
-let handle = document.getElementById('handle');
-let btn = document.getElementById('send');
-let output = document.getElementById('output');
+const message = document.getElementById('message');
+const handle = document.getElementById('handle');
+const btn = document.getElementById('send');
+const output = document.getElementById('output');
+const feedback = document.getElementById('feedback');
 
 // Emit events
 
 btn.addEventListener('click', function(){
     socket.emit('chat', {
         message: message.value,
-        handle: handle.value
+        handle: handle.value,
+        id: socket.id
     });
 });
 
+message.addEventListener('keypress', function(){
+    socket.emit('typing', handle.value);
+})
+
 //Listen for events
 socket.on('chat', function(data){
-    output.innerHTML += `<p><strong>${data.handle}:</strong>${data.message}</p>`;
-    //output.innerHTML += '<p><strong>' + data.handle + '</strong>' + data.message + '</p>';
+    feedback.innerHTML = "";
+    if(data.id == socket.id){
+        output.innerHTML += `<div class="row">
+                                <div class="col-3">
+                                    <strong>${data.handle}:</strong>
+                                </div>
+                                <div class="user col-8">${data.message}</div>
+                            </div>`;
+    }else{
+        output.innerHTML += `<div class="row">
+                                <div class="col-3">
+                                    <strong>${data.handle}:</strong>
+                                </div>
+                                <div class="other col-8">${data.message}</div>
+                            </div>`;
+    }
+});
+
+socket.on('typing', function(data){
+    feedback.innerHTML = `<p><em>${data} is typing a message...</em></p>`;
 });
